@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TiendaDAW · Versión saboteada</title>
+  <!-- Saboteador: he escondido la primera mitad de la clave de despliegue: TIENDA -->
+  <style>
+    :root {
+      --azul: #2563eb;
+      --oscuro: #0f172a;
+      --clave-final: "DAW26"; /* segunda mitad de la clave de despliegue */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
+    #cabecera {
+      position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 10;
+      background: var(--oscuro); color: #fff; padding: 0 24px; line-height: 64px;
+    }
+    #cabecera h1 { font-size: 22px; }
+    main { padding: 96px 24px 48px; max-width: 900px; margin: 0 auto; }
+    h2 { margin: 24px 0 12px; }
+    h4 { margin: 16px 0 8px; } /* ¿dónde se ha quedado el h3? */
+    .producto {
+      position: relative; display: inline-block; vertical-align: top;
+      width: 260px; margin: 0 12px 16px 0; padding: 12px;
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 10px;
+    }
+    .producto img { display: block; width: 100%; height: 140px; border-radius: 6px; }
+    .aviso { color: #c7c7c7; font-size: 14px; } /* contraste insuficiente */
+    form { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; max-width: 420px; }
+    form input { display: block; width: 100%; margin: 6px 0 12px; padding: 8px; }
+    #ayuda {
+      position: fixed; right: 24px; top: 40px; z-index: 5;
+      background: var(--azul); color: #fff; padding: 10px 16px; border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#" id="ayuda">¿Ayuda?</a>
+
+  <header id="cabecera">
+    <h1>TiendaDAW</h1>
+  </header>
+
+  <main>
+    <h2>Productos destacados</h2>
+    <p class="aviso">Envío gratis en pedidos superiores a 50 €</p>
+
+    <article class="producto">
+      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 140'><rect width='260' height='140' fill='%23dbeafe'/><rect x='40' y='50' width='180' height='50' rx='6' fill='%231e3a8a'/></svg>">
+      <h4>Teclado mecánico</h4>
+      <p>79,90 €</p>
+    </article>
+
+    <article class="producto">
+      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 140'><rect width='260' height='140' fill='%23dcfce7'/><ellipse cx='130' cy='75' rx='30' ry='45' fill='%23166534'/></svg>" alt="Ratón inalámbrico de color verde">
+      <h4>Ratón inalámbrico</h4>
+      <p>39,50 €</p>
+    </article>
+
+    <article class="producto">
+      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 140'><rect width='260' height='140' fill='%23fef3c7'/><rect x='50' y='25' width='160' height='90' rx='4' fill='%2392400e'/></svg>">
+      <h4>Monitor 27"</h4>
+      <p>289,00 €</p>
+    </article>
+
+    <article class="producto">
+      <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 140'><rect width='260' height='140' fill='%23fce7f3'/><circle cx='100' cy='75' r='28' fill='%239d174d'/><circle cx='160' cy='75' r='28' fill='%239d174d'/></svg>">
+      <h4>Auriculares</h4>
+      <p>59,99 €</p>
+    </article>
+
+    <h2>Suscríbete al boletín</h2>
+    <form>
+      <label for="nombre">Nombre</label>
+      <input type="text" id="nombre">
+      <input type="email" placeholder="Correo electrónico">
+      <input type="tel" placeholder="Teléfono (opcional)">
+      <button type="submit">Suscribirme</button>
+    </form>
+  </main>
+</body>
+</html>

@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breakout · El sabotaje de TiendaDAW</title>
+  <style>
+    :root {
+      --fondo: #0b1220;
+      --panel: #ffffff;
+      --texto: #1e293b;
+      --suave: #475569;
+      --borde: #cbd5e1;
+      --primario: #1d4ed8;
+      --primario-hover: #1e40af;
+      --ok: #166534;
+      --ok-fondo: #dcfce7;
+      --error: #991b1b;
+      --error-fondo: #fee2e2;
+      --pista-fondo: #fef9c3;
+      --codigo: #0f172a;
+      --base: 1rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: var(--base);
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    .visualmente-oculto {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    :focus-visible {
+      outline: 3px solid #f59e0b;
+      outline-offset: 2px;
+    }
+
+    /* Barra superior */
+    .barra {
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 20px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .barra h1 {
+      font-size: 1.15rem;
+      letter-spacing: .3px;
+      margin-right: auto;
+    }
+
+    .barra h1 span {
+      color: #93c5fd;
+    }
+
+    .reloj {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .reloj.agotado {
+      color: #fca5a5;
+    }
+
+    .controles {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-barra {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font: inherit;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+
+    .btn-barra:hover {
+      background: #334155;
+    }
+
+    /* Progreso: candados */
+    .progreso {
+      list-style: none;
+      display: flex;
+      gap: 8px;
+      padding: 14px 20px;
+      flex-wrap: wrap;
+      background: #111a2e;
+    }
+
+    .progreso li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      padding: 4px 12px 4px 8px;
+      font-size: .85rem;
+    }
+
+    .progreso li.abierto {
+      background: #14532d;
+      border-color: #22c55e;
+      color: #fff;
+    }
+
+    .progreso li.actual {
+      border-color: #93c5fd;
+      color: #fff;
+      box-shadow: 0 0 0 2px #1d4ed8 inset;
+    }
+
+    .progreso svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+    }
+
+    /* Panel principal */
+    main {
+      padding: 24px 16px 48px;
+    }
+
+    .panel {
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--panel);
+      border-radius: 14px;
+      padding: 28px clamp(18px, 4vw, 36px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+
+    .etiqueta {
+      display: inline-block;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--primario);
+      background: #dbeafe;
+      border-radius: 6px;
+      padding: 2px 8px;
+      margin-bottom: 8px;
+    }
+
+    .panel h2 {
+      font-size: 1.6rem;
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .panel h2:focus {
+      outline: none;
+    }
+
+    .narrativa {
+      border-left: 4px solid var(--primario);
+      background: #f1f5f9;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      color: #0f172a;
+    }
+
+    .narrativa p+p {
+      margin-top: 8px;
+    }
+
+    .reto p,
+    .reto ul,
+    .reto ol {
+      margin: 10px 0;
+    }
+
+    .reto ul,
+    .reto ol {
+      padding-left: 1.4rem;
+    }
+
+    .reto li {
+      margin: 4px 0;
+    }
+
+    pre {
+      background: var(--codigo);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: .95rem;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    p code,
+    li code {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: .92em;
+    }
+
+    .c-com {
+      color: #94a3b8;
+    }
+
+    .c-sel {
+      color: #93c5fd;
+    }
+
+    .c-prop {
+      color: #fcd34d;
+    }
+
+    a {
+      color: var(--primario);
+      font-weight: 600;
+    }
+
+    .enlace-externo::after {
+      content: " ↗";
+    }
+
+    table.tabla {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+      font-size: .95rem;
+    }
+
+    .tabla th,
+    .tabla td {
+      border: 1px solid var(--borde);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .tabla th {
+      background: #f1f5f9;
+    }
+
+    /* Candado */
+    .candado {
+      margin-top: 22px;
+      padding: 18px;
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .candado label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .fila-candado {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .fila-candado input {
+      flex: 1 1 220px;
+      font: inherit;
+      font-size: 1.15rem;
+      letter-spacing: 2px;
+      padding: 10px 12px;
+      border: 2px solid #64748b;
+      border-radius: 8px;
+      text-transform: uppercase;
+    }
+
+    .btn {
+      font: inherit;
+      font-weight: 700;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 18px;
+      cursor: pointer;
+      background: var(--primario);
+      color: #fff;
+    }
+
+    .btn:hover {
+      background: var(--primario-hover);
+    }
+
+    .btn.secundario {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn.secundario:hover {
+      background: #cbd5e1;
+    }
+
+    .ayuda-formato {
+      font-size: .88rem;
+      color: var(--suave);
+      margin-top: 8px;
+    }
+
+    .feedback {
+      margin-top: 12px;
+      padding: 0;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .feedback:not(:empty) {
+      padding: 10px 14px;
+    }
+
+    .feedback.ok {
+      background: var(--ok-fondo);
+      color: var(--ok);
+    }
+
+    .feedback.mal {
+      background: var(--error-fondo);
+      color: var(--error);
+    }
+
+    /* Pistas */
+    .pistas {
+      margin-top: 20px;
+    }
+
+    .pistas h3 {
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .pistas .nota {
+      font-size: .88rem;
+      color: var(--suave);
+      margin-bottom: 10px;
+    }
+
+    .lista-pistas {
+      list-style: none;
+    }
+
+    .lista-pistas li {
+      background: var(--pista-fondo);
+      border: 1px solid #fde047;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+    }
+
+    .lista-pistas li strong {
+      display: block;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: #713f12;
+    }
+
+    .acciones {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .campo-grupo {
+      margin-top: 16px;
+    }
+
+    .campo-grupo label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .campo-grupo input {
+      font: inherit;
+      padding: 10px 12px;
+      border: 2px solid #64748b;
+      border-radius: 8px;
+      width: min(100%, 360px);
+    }
+
+    .resumen {
+      margin-top: 16px;
+    }
+
+    .exito {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+
+    .exito svg {
+      width: 72px;
+      height: 72px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .panel {
+        animation: entrar .35s ease-out;
+      }
+
+      @keyframes entrar {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .agitar {
+        animation: agitar .4s;
+      }
+
+      @keyframes agitar {
+        25% {
+          transform: translateX(-6px);
+        }
+
+        50% {
+          transform: translateX(6px);
+        }
+
+        75% {
+          transform: translateX(-3px);
+        }
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="barra">
+    <h1>Breakout · <span>El sabotaje de TiendaDAW</span></h1>
+    <p class="reloj" id="reloj" aria-live="off" title="Tiempo orientativo: no penaliza">⏱ 50:00</p>
+    <div class="controles">
+      <button type="button" class="btn-barra" id="btn-pausa" aria-pressed="false">Pausar tiempo</button>
+      <button type="button" class="btn-barra" id="btn-escuchar">🔊 Escuchar historia</button>
+      <button type="button" class="btn-barra" id="btn-letra" aria-pressed="false">A+ Letra grande</button>
+      <button type="button" class="btn-barra" id="btn-reiniciar">Reiniciar</button>
+    </div>
+  </header>
+
+  <nav aria-label="Progreso de las misiones">
+    <ol class="progreso" id="progreso"></ol>
+  </nav>
+
+  <main>
+    <section class="panel" id="panel" aria-labelledby="titulo-mision"></section>
+  </main>
+
+  <p class="visualmente-oculto" aria-live="polite" id="anuncio"></p>
+
+  <script>
+    /* =====================================================================
+       BREAKOUT · El sabotaje de TiendaDAW
+       Diseño de Interfaces Web · 2º DAW
+       Las respuestas no están escritas en el código: solo se guarda una
+       huella (hash) de cada una, así que inspeccionar el JS no da la solución.
+       ===================================================================== */
+
+    const DURACION_MIN = 50;
+    const CLAVE_LS = 'breakout-tiendadaw-v1';
+
+    // Huella de las respuestas (cyrb53 con sal por misión)
+    function huella(texto, sal) {
+      let h1 = 0xdeadbeef ^ sal, h2 = 0x41c6ce57 ^ sal;
+      for (let i = 0; i < texto.length; i++) {
+        const ch = texto.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+    function normalizar(t) {
+      return t.normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toUpperCase().replace(/[^A-Z0-9]/g, '');
+    }
+
+    const MISIONES = [
+      {
+        id: 'm0', corto: 'Tutorial', sal: 11, hash: '2et91xb3bom',
+        titulo: 'Misión 0 · Cómo funciona el breakout',
+        narrativa: [
+          'Son las 23:40. Mañana a las 9:00 TiendaDAW lanza su nueva web y alguien ha saboteado la hoja de estilos.',
+          'Vuestro equipo tiene que superar cinco candados para recuperar la clave de despliegue antes de la apertura.'
+        ],
+        reto: `
+      <p>Cada misión tiene un <strong>reto</strong> y un <strong>candado</strong>. Al resolver el reto obtenéis un código; escribidlo en el candado para avanzar.</p>
+      <ul>
+        <li>Si os atascáis, podéis abrir <strong>pistas</strong>. Hay tres por misión y cada una ayuda más que la anterior. Se registran, pero no restan.</li>
+        <li>El tiempo es <strong>orientativo</strong>: podéis pausarlo y seguir aunque se acabe.</li>
+        <li>Turnaos los roles en cada misión: quien maneja las DevTools, quien comprueba los códigos y quien anota las pistas usadas.</li>
+      </ul>
+      <p>Para abrir este primer candado, escribid la palabra que aparece en negrita al final de esta frase: la misión empieza con el <strong>DESPEGUE</strong>.</p>`,
+        formato: 'Una palabra. No importan mayúsculas ni tildes.',
+        pistas: [
+          'Buscad una palabra resaltada en negrita en el último párrafo.',
+          'Es la última palabra del último párrafo.',
+          'La palabra empieza por «DES» y tiene 8 letras.'
+        ]
+      },
+      {
+        id: 'm1', corto: 'Selectores', sal: 23, hash: '1jfb30xavr9',
+        titulo: 'Misión 1 · El selector imposible',
+        narrativa: [
+          'El saboteador ha llenado la hoja de estilos de reglas que se pisan entre sí. Para saber cuál gana, necesitáis calcular la especificidad.'
+        ],
+        reto: `
+      <pre><code><span class="c-sel">#menu .item a</span> { color: red; }          <span class="c-com">/* A */</span>
+<span class="c-sel">ul li.activo</span> { color: green; }          <span class="c-com">/* B */</span>
+<span class="c-sel">.tarjeta.destacada h3</span> { color: blue; } <span class="c-com">/* C */</span></code></pre>
+      <p>Calculad la especificidad de cada selector contando <strong>ids</strong>, <strong>clases</strong> y <strong>etiquetas</strong>, y escribidla como un número de tres cifras. Por ejemplo, 1 id, 0 clases y 2 etiquetas es <code>102</code>.</p>
+      <p>El código del candado es la <strong>suma</strong> de las especificidades de A, B y C.</p>`,
+        formato: 'Un número.',
+        pistas: [
+          'Contad por separado: los <code>#</code> son ids, los <code>.</code> son clases y el resto de nombres son etiquetas.',
+          'Ejemplo resuelto: <code>nav#principal .enlace</code> tiene 1 id, 1 clase y 1 etiqueta, así que vale 111.',
+          'A vale 111 y B vale 012 (es decir, 12). Os falta calcular C y sumar los tres.'
+        ]
+      },
+      {
+        id: 'm2', corto: 'Modelo de caja', sal: 37, hash: '1ibotmhk9qh',
+        titulo: 'Misión 2 · La caja que no cabe',
+        narrativa: [
+          'Las tarjetas de producto se desbordan del contenedor. El saboteador ha cambiado el modelo de caja y nadie sabe cuánto ocupan realmente.'
+        ],
+        reto: `
+      <pre><code><span class="c-sel">.tarjeta</span> {
+  <span class="c-prop">box-sizing</span>: content-box;
+  <span class="c-prop">width</span>: 300px;
+  <span class="c-prop">padding</span>: 20px;
+  <span class="c-prop">border</span>: 5px solid #cbd5e1;
+  <span class="c-prop">margin</span>: 10px;
+}</code></pre>
+      <p>¿Cuántos píxeles de <strong>ancho total</strong> ocupa la tarjeta en la página, <strong>incluidos los márgenes</strong>?</p>`,
+        formato: 'Un número, sin «px».',
+        pistas: [
+          'Con <code>content-box</code>, <code>width</code> solo mide el contenido. El relleno y el borde se suman por fuera.',
+          'Sumad el relleno, el borde y el margen de los dos lados: izquierdo y derecho.',
+          '300 de contenido + 40 de relleno + 10 de borde… y os falta el margen.'
+        ]
+      },
+      {
+        id: 'm3', corto: 'Position', sal: 41, hash: '1xsulsa5pag',
+        titulo: 'Misión 3 · Todo fuera de su sitio',
+        narrativa: [
+          'Ahora cada elemento de la página aparece donde quiere. Tenéis que decidir qué valor de position necesita cada uno.'
+        ],
+        reto: `
+      <table class="tabla">
+        <caption class="visualmente-oculto">Valores de position y su número</caption>
+        <thead><tr><th scope="col">Número</th><th scope="col">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>static</code></td></tr>
+          <tr><td>2</td><td><code>relative</code></td></tr>
+          <tr><td>3</td><td><code>absolute</code></td></tr>
+          <tr><td>4</td><td><code>fixed</code></td></tr>
+          <tr><td>5</td><td><code>sticky</code></td></tr>
+        </tbody>
+      </table>
+      <ol type="A">
+        <li>La cabecera, que no se mueve nunca al hacer scroll.</li>
+        <li>La insignia «Nuevo», colocada en la esquina superior derecha de una tarjeta.</li>
+        <li>El título de sección, que se queda pegado arriba mientras su sección es visible.</li>
+        <li>La tarjeta, que no se mueve de su sitio pero sirve de referencia a la insignia.</li>
+        <li>Un párrafo normal que sigue el flujo del documento.</li>
+      </ol>
+      <p>El código es el número de cada elemento en orden, de A a E.</p>`,
+        formato: 'Cinco cifras seguidas.',
+        pistas: [
+          'Preguntaos respecto a qué se coloca cada elemento: la ventana, un ancestro posicionado o el flujo normal.',
+          '<code>fixed</code> se coloca respecto a la ventana; <code>absolute</code>, respecto al ancestro posicionado más cercano.',
+          'A es 4 y E es 1. Os quedan B, C y D.'
+        ]
+      },
+      {
+        id: 'm4', corto: 'Accesibilidad', sal: 53, hash: '98at3nhfge',
+        titulo: 'Misión 4 · Una web que no todos pueden usar',
+        narrativa: [
+          'Habéis recuperado los estilos, pero el saboteador también rompió la accesibilidad de la tienda. Así no pasaría ninguna auditoría.'
+        ],
+        reto: `
+      <p>Abrid la <a class="enlace-externo" href="tienda-rota.html" target="_blank" rel="noopener">web saboteada<span class="visualmente-oculto"> (se abre en una pestaña nueva)</span></a> y analizadla con la extensión WAVE, con Lighthouse o inspeccionando el HTML.</p>
+      <ol>
+        <li>¿Cuántas <strong>imágenes</strong> no tienen texto alternativo?</li>
+        <li>¿Cuántos <strong>campos del formulario</strong> no tienen una etiqueta <code>&lt;label&gt;</code> asociada?</li>
+      </ol>
+      <p>El código son los dos números seguidos: primero las imágenes y después los campos.</p>`,
+        formato: 'Dos cifras seguidas.',
+        pistas: [
+          'En las DevTools, buscad <code>&lt;img</code> en el panel Elementos (Ctrl+F) y revisad si cada una tiene el atributo <code>alt</code>.',
+          'Un <code>placeholder</code> no sustituye a un <code>&lt;label&gt;</code>: el campo sigue sin etiqueta.',
+          'Hay 4 imágenes y solo una tiene <code>alt</code>. Ahora contad los campos sin etiqueta.'
+        ]
+      },
+      {
+        id: 'm5', corto: 'Clave final', sal: 67, hash: '22gah0kk53n',
+        titulo: 'Misión 5 · La clave de despliegue',
+        narrativa: [
+          'Último paso. El saboteador partió la clave de despliegue en dos mitades y las escondió dentro de la propia web saboteada.'
+        ],
+        reto: `
+      <p>Volved a la <a class="enlace-externo" href="tienda-rota.html" target="_blank" rel="noopener">web saboteada<span class="visualmente-oculto"> (se abre en una pestaña nueva)</span></a> y usad las DevTools:</p>
+      <ul>
+        <li>La <strong>primera mitad</strong> está en un comentario del HTML.</li>
+        <li>La <strong>segunda mitad</strong> está en una variable CSS.</li>
+      </ul>
+      <p>Unid las dos mitades, sin espacios, para formar la clave.</p>`,
+        formato: 'Letras y números. No importan mayúsculas.',
+        pistas: [
+          'Los comentarios se ven en el panel Elementos o en el código fuente de la página (Ctrl+U).',
+          'Las variables CSS suelen declararse en <code>:root</code>. Seleccionad el elemento <code>&lt;html&gt;</code> y mirad sus estilos.',
+          'La primera mitad es TIENDA. Buscad la variable <code>--clave-final</code>.'
+        ]
+      }
+    ];
+
+    const EXPERTO = {
+      id: 'mx', corto: 'Experto', sal: 79, hash: '25js73ys3ms',
+      titulo: 'Modo experto · El botón escondido',
+      narrativa: [
+        'Misión opcional para quien ha terminado antes. Hay un fallo más que nadie ha visto.'
+      ],
+      reto: `
+    <p>En la <a class="enlace-externo" href="tienda-rota.html" target="_blank" rel="noopener">web saboteada<span class="visualmente-oculto"> (se abre en una pestaña nueva)</span></a>, el botón «¿Ayuda?» queda tapado por la cabecera.</p>
+    <p>Sin modificar la cabecera, ¿cuál es el <strong>valor mínimo</strong> (número entero) que debe tener el <code>z-index</code> de <code>#ayuda</code> para quedar por encima?</p>
+    <p><strong>Reto libre extra:</strong> descargad la web, corregid todos los errores de accesibilidad y entregad el enlace a vuestro profesor.</p>`,
+      formato: 'Un número.',
+      pistas: [
+        'Mirad qué <code>z-index</code> tiene la cabecera y cuál tiene el botón.',
+        'Los dos son <code>fixed</code> y comparten contexto de apilamiento: gana el número mayor.',
+        'La cabecera tiene <code>z-index: 10</code>.'
+      ]
+    };
+
+    // ---------- Estado ----------
+    const estadoInicial = () => ({
+      grupo: '', actual: 0, abiertas: [], pistas: {}, intentos: {},
+      restante: DURACION_MIN * 60, pausado: false, experto: false, expertoOk: false, fin: false
+    });
+    let estado = cargar();
+
+    function cargar() {
+      try {
+        const s = JSON.parse(localStorage.getItem(CLAVE_LS));
+        if (s && typeof s.actual === 'number') return Object.assign(estadoInicial(), s);
+      } catch (e) { }
+      return estadoInicial();
+    }
+    function guardar() {
+      try { localStorage.setItem(CLAVE_LS, JSON.stringify(estado)); } catch (e) { }
+    }
+
+    // ---------- Utilidades ----------
+    const $ = (s) => document.querySelector(s);
+    const panel = $('#panel');
+    const anuncio = (t) => { $('#anuncio').textContent = ''; setTimeout(() => $('#anuncio').textContent = t, 50); };
+    const textoPlano = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent.replace(/\s+/g, ' ').trim(); };
+
+    const ICONO_CERRADO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+    const ICONO_ABIERTO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>';
+
+    // ---------- Progreso ----------
+    function pintarProgreso() {
+      const ol = $('#progreso');
+      ol.innerHTML = '';
+      MISIONES.forEach((m, i) => {
+        const li = document.createElement('li');
+        const abierta = estado.abiertas.includes(m.id);
+        const esActual = !estado.fin && !estado.experto && i === estado.actual;
+        if (abierta) li.classList.add('abierto');
+        if (esActual) { li.classList.add('actual'); li.setAttribute('aria-current', 'step'); }
+        li.innerHTML = (abierta ? ICONO_ABIERTO : ICONO_CERRADO) +
+          `<span>${i}. ${m.corto}</span><span class="visualmente-oculto">: ${abierta ? 'candado abierto' : 'candado cerrado'}</span>`;
+        ol.appendChild(li);
+      });
+    }
+
+    // ---------- Pantallas ----------
+    function pintarMision(m) {
+      const usadas = estado.pistas[m.id] || 0;
+      const esTutorial = m.id === 'm0';
+      panel.innerHTML = `
+    <span class="etiqueta">${m.id === 'mx' ? 'Opcional' : 'Misión ' + MISIONES.indexOf(m) + ' de 5'}</span>
+    <h2 id="titulo-mision" tabindex="-1">${m.titulo}</h2>
+    <div class="narrativa">${m.narrativa.map(p => `<p>${p}</p>`).join('')}</div>
+    ${esTutorial ? `
+      <div class="campo-grupo">
+        <label for="grupo">Nombre del equipo</label>
+        <input id="grupo" type="text" autocomplete="off" value="${estado.grupo.replace(/"/g, '&quot;')}" placeholder="Ej.: Los del z-index">
+      </div>` : ''}
+    <div class="reto">${m.reto}</div>
+    <form class="candado" id="form-candado" novalidate>
+      <label for="codigo">Código del candado</label>
+      <div class="fila-candado">
+        <input id="codigo" type="text" autocomplete="off" spellcheck="false" aria-describedby="formato feedback">
+        <button class="btn" type="submit">Abrir candado</button>
+      </div>
+      <p class="ayuda-formato" id="formato">${m.formato}</p>
+      <p class="feedback" id="feedback" role="status"></p>
+    </form>
+    <section class="pistas" aria-labelledby="titulo-pistas">
+      <h3 id="titulo-pistas">Pistas</h3>
+      <p class="nota">Usadas: <span id="contador-pistas">${usadas}</span> de 3. Abridlas solo si os atascáis.</p>
+      <ol class="lista-pistas" id="lista-pistas"></ol>
+      <button type="button" class="btn secundario" id="btn-pista">Ver pista ${usadas + 1}</button>
+    </section>`;
+
+      const lista = $('#lista-pistas');
+      for (let i = 0; i < usadas; i++) añadirPista(lista, m, i);
+      actualizarBotonPista(m);
+
+      if (esTutorial) {
+        $('#grupo').addEventListener('input', (e) => { estado.grupo = e.target.value.trim(); guardar(); });
+      }
+      $('#btn-pista').addEventListener('click', () => {
+        const n = estado.pistas[m.id] || 0;
+        if (n >= 3) return;
+        estado.pistas[m.id] = n + 1;
+        guardar();
+        añadirPista(lista, m, n);
+        $('#contador-pistas').textContent = n + 1;
+        actualizarBotonPista(m);
+        anuncio('Pista ' + (n + 1) + ': ' + textoPlano(m.pistas[n]));
+      });
+      $('#form-candado').addEventListener('submit', (e) => { e.preventDefault(); comprobar(m); });
+    }
+
+    function añadirPista(lista, m, i) {
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>Pista ${i + 1}</strong>${m.pistas[i]}`;
+      lista.appendChild(li);
+    }
+    function actualizarBotonPista(m) {
+      const n = estado.pistas[m.id] || 0;
+      const b = $('#btn-pista');
+      if (n >= 3) { b.hidden = true; } else { b.textContent = 'Ver pista ' + (n + 1); }
+    }
+
+    function comprobar(m) {
+      const entrada = $('#codigo');
+      const fb = $('#feedback');
+      const valor = normalizar(entrada.value);
+      if (!valor) {
+        fb.className = 'feedback mal';
+        fb.textContent = 'Escribid un código antes de intentar abrir el candado.';
+        entrada.focus();
+        return;
+      }
+      estado.intentos[m.id] = (estado.intentos[m.id] || 0) + 1;
+      if (huella(valor, m.sal) === m.hash) {
+        fb.className = 'feedback ok';
+        fb.textContent = '¡Candado abierto! Bien hecho.';
+        if (m.id === 'mx') {
+          estado.expertoOk = true; estado.experto = false; estado.fin = true;
+        } else {
+          if (!estado.abiertas.includes(m.id)) estado.abiertas.push(m.id);
+          estado.actual = MISIONES.indexOf(m) + 1;
+          if (estado.actual >= MISIONES.length) estado.fin = true;
+        }
+        guardar();
+        setTimeout(render, 900);
+      } else {
+        fb.className = 'feedback mal';
+        const n = estado.intentos[m.id];
+        fb.textContent = n >= 3 && (estado.pistas[m.id] || 0) < 3
+          ? 'Ese código no abre el candado. Lleváis varios intentos: quizá os ayude abrir una pista.'
+          : 'Ese código no abre el candado. Revisad el reto y comprobad el formato.';
+        const c = $('#form-candado');
+        c.classList.remove('agitar'); void c.offsetWidth; c.classList.add('agitar');
+        entrada.select();
+        guardar();
+      }
+    }
+
+    function pintarFinal() {
+      const usado = DURACION_MIN * 60 - estado.restante;
+      const mins = Math.floor(usado / 60), segs = usado % 60;
+      const total = MISIONES.reduce((s, m) => s + (estado.pistas[m.id] || 0), 0);
+      const filas = MISIONES.map((m, i) =>
+        `<tr><td>${i}. ${m.corto}</td><td>${estado.pistas[m.id] || 0}</td><td>${estado.intentos[m.id] || 0}</td></tr>`).join('');
+      panel.innerHTML = `
+    <div class="exito">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3L17 9"/></svg>
+    </div>
+    <span class="etiqueta">Misión cumplida</span>
+    <h2 id="titulo-mision" tabindex="-1">¡TiendaDAW está lista para el lanzamiento!</h2>
+    <div class="narrativa"><p>Habéis recuperado la clave de despliegue. La web abrirá a las 9:00 gracias a vuestro equipo${estado.grupo ? ', <strong>' + escapar(estado.grupo) + '</strong>' : ''}.</p></div>
+    <div class="resumen">
+      <table class="tabla">
+        <caption class="visualmente-oculto">Resumen de pistas e intentos por misión</caption>
+        <thead><tr><th scope="col">Misión</th><th scope="col">Pistas usadas</th><th scope="col">Intentos</th></tr></thead>
+        <tbody>${filas}
+          <tr><td>Modo experto</td><td colspan="2">${estado.expertoOk ? 'Superado' : 'No realizado'}</td></tr>
+        </tbody>
+      </table>
+      <p>Tiempo empleado: <strong>${mins} min ${String(segs).padStart(2, '0')} s</strong> · Pistas totales: <strong>${total}</strong></p>
+    </div>
+    <div class="acciones">
+      <button type="button" class="btn" id="btn-copiar">Copiar resumen para el profesor</button>
+      ${estado.expertoOk ? '' : '<button type="button" class="btn secundario" id="btn-experto">Ir al modo experto</button>'}
+    </div>
+    <p class="feedback" id="feedback" role="status"></p>`;
+
+      $('#btn-copiar').addEventListener('click', async () => {
+        const texto = `Breakout TiendaDAW · Equipo: ${estado.grupo || '(sin nombre)'}\n` +
+          MISIONES.map((m, i) => `${i}. ${m.corto}: ${estado.pistas[m.id] || 0} pistas, ${estado.intentos[m.id] || 0} intentos`).join('\n') +
+          `\nModo experto: ${estado.expertoOk ? 'superado' : 'no realizado'}\nTiempo: ${mins} min ${segs} s · Pistas totales: ${total}`;
+        const fb = $('#feedback');
+        try { await navigator.clipboard.writeText(texto); fb.className = 'feedback ok'; fb.textContent = 'Resumen copiado. Pegadlo en la tarea del aula virtual.'; }
+        catch (e) { fb.className = 'feedback mal'; fb.textContent = 'No se pudo copiar automáticamente. Haced una captura de esta pantalla.'; }
+      });
+      const be = $('#btn-experto');
+      if (be) be.addEventListener('click', () => { estado.experto = true; estado.fin = false; guardar(); render(); });
+    }
+
+    function escapar(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    function render() {
+      window.speechSynthesis && speechSynthesis.cancel();
+      pintarProgreso();
+      if (estado.experto) pintarMision(EXPERTO);
+      else if (estado.fin) pintarFinal();
+      else pintarMision(MISIONES[estado.actual]);
+      const t = $('#titulo-mision');
+      if (t) t.focus();
+    }
+
+    function misionActual() {
+      if (estado.experto) return EXPERTO;
+      if (estado.fin) return null;
+      return MISIONES[estado.actual];
+    }
+
+    // ---------- Reloj (orientativo) ----------
+    function pintarReloj() {
+      const r = Math.max(estado.restante, 0);
+      const el = $('#reloj');
+      el.textContent = '⏱ ' + String(Math.floor(r / 60)).padStart(2, '0') + ':' + String(r % 60).padStart(2, '0');
+      el.classList.toggle('agotado', r === 0);
+      if (r === 0) el.title = 'Tiempo orientativo agotado: podéis seguir jugando';
+    }
+    setInterval(() => {
+      if (estado.pausado || estado.fin || estado.restante <= 0) return;
+      estado.restante--;
+      if (estado.restante === 0) anuncio('El tiempo orientativo se ha agotado. Podéis seguir jugando sin penalización.');
+      if (estado.restante % 10 === 0) guardar();
+      pintarReloj();
+    }, 1000);
+
+    const btnPausa = $('#btn-pausa');
+    function pintarPausa() {
+      btnPausa.textContent = estado.pausado ? 'Reanudar tiempo' : 'Pausar tiempo';
+      btnPausa.setAttribute('aria-pressed', String(estado.pausado));
+    }
+    btnPausa.addEventListener('click', () => { estado.pausado = !estado.pausado; guardar(); pintarPausa(); });
+
+    // ---------- Escuchar (síntesis de voz) ----------
+    const btnEscuchar = $('#btn-escuchar');
+    if (!('speechSynthesis' in window)) btnEscuchar.hidden = true;
+    btnEscuchar.addEventListener('click', () => {
+      const m = misionActual();
+      speechSynthesis.cancel();
+      const texto = m
+        ? [m.titulo, ...m.narrativa, textoPlano(m.reto)].join('. ')
+        : textoPlano(panel.innerHTML);
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = 'es-ES';
+      u.rate = 0.95;
+      speechSynthesis.speak(u);
+    });
+
+    // ---------- Letra grande ----------
+    const btnLetra = $('#btn-letra');
+    function pintarLetra() {
+      document.documentElement.style.setProperty('--base', estado.letraGrande ? '1.2rem' : '1rem');
+      btnLetra.setAttribute('aria-pressed', String(!!estado.letraGrande));
+    }
+    btnLetra.addEventListener('click', () => { estado.letraGrande = !estado.letraGrande; guardar(); pintarLetra(); });
+
+    // ---------- Reiniciar ----------
+    $('#btn-reiniciar').addEventListener('click', () => {
+      if (confirm('¿Seguro que queréis reiniciar? Se perderá el progreso de este equipo.')) {
+        estado = estadoInicial(); guardar(); pintarReloj(); pintarPausa(); pintarLetra(); render();
+      }
+    });
+
+    pintarReloj(); pintarPausa(); pintarLetra(); render();
+  </script>
+</body>
+
+</html>
